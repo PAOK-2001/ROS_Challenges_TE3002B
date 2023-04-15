@@ -122,6 +122,12 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_executable(controller src/Controller.cpp)
+target_link_libraries(controller ${catkin_LIBRARIES})
+
+add_executable(path_generator src/PathGenerator.cpp)
+target_link_libraries(path_generator ${catkin_LIBRARIES})
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/mini_challenge_1.cpp
