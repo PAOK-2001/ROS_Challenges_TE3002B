@@ -27,10 +27,7 @@ int main(int argc, char *argv[]) {
     ros::Rate rate(nodeRate);
     while (ros::ok()) {
         ros::param::get("/desired_path", path);
-        if(path != prevPath) {
-            pathPublisher.publish(generate_path(path));
-            prevPath = path;
-        }
+        pathPublisher.publish(generate_path(path));
         rate.sleep();
     }
     return 0;
