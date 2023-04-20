@@ -1,0 +1,10 @@
+<launch>
+    <rosparam file = "$(find mini_challenge_1)/config/robot_params.yaml" command = "load"/>
+    <rosparam file = "$(find mini_challenge_1)/config/path.yaml" command = "load"/>
+    <rosparam file = "$(find mini_challenge_1)/config/control.yaml" command = "load"/>
+    
+    <node name="path_generator"     pkg="mini_challenge_1" type="path_generator"   output="screen"/>
+    <node name="controller" pkg="mini_challenge_1" type="controller"  output="screen"/>
+
+
+</launch>

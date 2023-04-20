@@ -9,6 +9,7 @@
         "iterator": "cpp",
         "initializer_list": "cpp",
         "iostream": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "algorithm": "cpp"
     }
 }
