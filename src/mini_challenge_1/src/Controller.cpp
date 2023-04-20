@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 
     float kpr, kpt, wheelbase, wheel_radius;
     ros::param::get("/rotational_constant", kpr);
-    ros::param::get("/rotational_constant", kpt);
+    ros::param::get("/translational_constant", kpt);
     ros::param::get("/wheel_base", wheelbase);
     ros::param::get("/wheel_radius", wheel_radius);
     ros::Rate rate(nodeRate);

@@ -1,2 +1,3 @@
-rotational_constant : 1
-translational_constant : 5
+rotational_constant : 0.1
+translational_constant : 2
+translational_integral_constant : 0

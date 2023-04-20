@@ -6,12 +6,12 @@
 using namespace std;
 
 int nodeRate = 100;
-vector<int> path;
-vector<int> prevPath;
+vector<float> path;
+vector<float> prevPath;
 
-nav_msgs::Path generate_path(vector <int> path) {
+nav_msgs::Path generate_path(vector <float> path) {
     nav_msgs::Path generatedPath;
-    for(int coord = 0; coord < path.size() - 2; coord+=2){
+    for(int coord = 0; coord <= path.size() - 2; coord+=2){
         geometry_msgs::PoseStamped currentCoord;
         currentCoord.pose.position.x = path[coord];
         currentCoord.pose.position.y = path[coord+1];

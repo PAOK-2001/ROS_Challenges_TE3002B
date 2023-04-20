@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int nodeRate = 300;
+int nodeRate = 100;
 nav_msgs::Path path;
 float right_speed , left_speed;
 
@@ -36,9 +36,11 @@ int main(int argc, char *argv[]) {
     ros::Publisher controllerOutput = handler.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
     ros::Publisher estimated_pose = handler.advertise<geometry_msgs::PoseStamped>("/estimated_pose", 10);
 
-    float kpr, kpt, wheelbase, wheel_radius;
+    float kpr, kit, kpt, wheelbase, wheel_radius;
     ros::param::get("/rotational_constant", kpr);
-    ros::param::get("/rotational_constant", kpt);
+    ros::param::get("/translational_constant", kpt);
+    ros::param::get("/translational_integral_constant", kit);
+    
     ros::param::get("/wheel_base", wheelbase);
     ros::param::get("/wheel_radius", wheel_radius);
     ros::Rate rate(nodeRate);
@@ -50,8 +52,11 @@ int main(int argc, char *argv[]) {
     float robot_orientation = 0;
 
     float w_max = 8;
-    float v_max = (w_max*wheel_radius)*0.6;
-    float angularV_max = 7;
+    float v_max = (w_max*wheel_radius)*0.3;
+    float angularV_max = 1;
+
+    float integral_trr = 0;
+    float integral_rr = 0;
 
     while(ros::ok){
         if(!hasFinished){
@@ -66,13 +71,12 @@ int main(int argc, char *argv[]) {
 
                 float distance = sqrt(pow(desired_y-robot_y,2)+pow(desired_x-robot_x,2));
 
-                while (distance>0.1){
+                while (distance>0.02){
                     float t = ros::Time::now().toSec();
                     //usleep(100000);
                     rate.sleep();
                     desired_angle = atan2(-(desired_y-robot_y),(desired_x -robot_x));
                     distance = sqrt(pow(desired_y-robot_y,2)+pow(desired_x-robot_x,2));
-                
                     float angle_error = (robot_orientation - desired_angle);
                     if(angle_error > M_PI) angle_error = angle_error - 2*M_PI;
                     else if(angle_error < - M_PI)angle_error = angle_error + 2*M_PI;
@@ -81,8 +85,9 @@ int main(int argc, char *argv[]) {
                     if(angularVelocity > angularV_max) angularVelocity = angularV_max;
                     else if (angularVelocity < -angularV_max) angularVelocity = -angularV_max;
                     
-                    float velocity = kpt*distance; 
+                    float velocity = kpt*distance + kit*integral_trr; 
                     velocity = v_max * tanh(velocity);
+                    integral_trr+=distance;
             
                     output.linear.x = velocity;
                     output.linear.y = 0;
@@ -117,6 +122,7 @@ int main(int argc, char *argv[]) {
                     
                 }
             }
+            integral_trr = 0;
             ros::spinOnce();
             rate.sleep();
             hasFinished = robot_x || robot_y;
