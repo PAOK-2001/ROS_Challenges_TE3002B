@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int nodeRate = 100;
+int nodeRate = 300;
 nav_msgs::Path path;
 float right_speed , left_speed;
 
@@ -19,6 +19,7 @@ void receive_path(const nav_msgs::Path &received_path){
 void receive_right_speed(const std_msgs::Float32 &received_speed){
     right_speed = received_speed.data;
 }
+
 void receive_left_speed(const std_msgs::Float32 &received_speed){
     left_speed = received_speed.data;
 }
@@ -29,8 +30,8 @@ int main(int argc, char *argv[]) {
     bool hasFinished = false;
     
     ros::Subscriber systemFeedback = handler.subscribe("/path", 10, receive_path);
-    ros::Subscriber systemFeedback = handler.subscribe("/wl", 10, receive_right_speed);
-    ros::Subscriber systemFeedback = handler.subscribe("/wr", 10, receive_left_speed);
+    ros::Subscriber wl = handler.subscribe("/wl", 10, receive_right_speed);
+    ros::Subscriber wr = handler.subscribe("/wr", 10, receive_left_speed);
 
     ros::Publisher controllerOutput = handler.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
     ros::Publisher estimated_pose = handler.advertise<geometry_msgs::PoseStamped>("/estimated_pose", 10);
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]) {
 
     float w_max = 8;
     float v_max = (w_max*wheel_radius)*0.6;
-    float angularV_max = 1;
+    float angularV_max = 7;
 
     while(ros::ok){
         if(!hasFinished){
@@ -67,15 +68,16 @@ int main(int argc, char *argv[]) {
 
                 while (distance>0.1){
                     float t = ros::Time::now().toSec();
-                    usleep(100000);
-                    desired_angle = atan2((desired_y-robot_y),(desired_x -robot_x));
+                    //usleep(100000);
+                    rate.sleep();
+                    desired_angle = atan2(-(desired_y-robot_y),(desired_x -robot_x));
                     distance = sqrt(pow(desired_y-robot_y,2)+pow(desired_x-robot_x,2));
                 
                     float angle_error = (robot_orientation - desired_angle);
                     if(angle_error > M_PI) angle_error = angle_error - 2*M_PI;
                     else if(angle_error < - M_PI)angle_error = angle_error + 2*M_PI;
                     
-                    float angularVelocity = -kpr*angle_error;
+                    float angularVelocity = kpr*angle_error;
                     if(angularVelocity > angularV_max) angularVelocity = angularV_max;
                     else if (angularVelocity < -angularV_max) angularVelocity = -angularV_max;
                     
@@ -91,13 +93,19 @@ int main(int argc, char *argv[]) {
                     output.angular.z = angularVelocity;
 
                     dt = ros::Time::now().toSec() - t;
-                                        
+
+                               
                     float real_linear_velocity =  ((right_speed + left_speed)/2) * wheel_radius;
-                    float real_angular_velocity =  (right_speed - left_speed)/wheelbase;
+                    float real_angular_velocity =  (right_speed - left_speed)/wheelbase*wheel_radius;
+
+                    //cout << real_linear_velocity << " " << real_angular_velocity << endl;
 
                     robot_orientation += real_angular_velocity*dt;
+                    
+                    if(robot_orientation < 0) robot_orientation = robot_orientation + 2*M_PI;
+
                     robot_x += real_linear_velocity*dt*cos(robot_orientation);
-                    robot_y += real_linear_velocity*dt*sin(robot_orientation);
+                    robot_y -= real_linear_velocity*dt*sin(robot_orientation);
 
                     puzzlePose.pose.position.x = robot_x;
                     puzzlePose.pose.position.y = robot_y;
@@ -105,6 +113,8 @@ int main(int argc, char *argv[]) {
 
                     controllerOutput.publish(output);
                     estimated_pose.publish(puzzlePose);
+                    ros::spinOnce();
+                    
                 }
             }
             ros::spinOnce();
@@ -120,5 +130,4 @@ int main(int argc, char *argv[]) {
         output.angular.z = 0;
         controllerOutput.publish(output);
     }
-
 }
