@@ -10,6 +10,7 @@
         "initializer_list": "cpp",
         "iostream": "cpp",
         "cmath": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "chrono": "cpp"
     }
 }

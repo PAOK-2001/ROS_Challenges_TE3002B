@@ -5,12 +5,14 @@
 #include <nav_msgs/Path.h>
 #include <std_msgs/Float32.h>
 #include <cmath>
+#include <chrono>
 
 using namespace std;
 
 int nodeRate = 100;
 nav_msgs::Path path;
 float right_speed , left_speed;
+bool isReceiving = false;
 
 void receive_path(const nav_msgs::Path &received_path){
     path = received_path;
@@ -18,10 +20,12 @@ void receive_path(const nav_msgs::Path &received_path){
 
 void receive_right_speed(const std_msgs::Float32 &received_speed){
     right_speed = received_speed.data;
+    isReceiving = true;
 }
 
 void receive_left_speed(const std_msgs::Float32 &received_speed){
     left_speed = received_speed.data;
+    isReceiving = true;
 }
 
 int main(int argc, char *argv[]) {
@@ -46,13 +50,13 @@ int main(int argc, char *argv[]) {
     ros::Rate rate(nodeRate);
     geometry_msgs::Twist output;
     geometry_msgs::PoseStamped puzzlePose;
-    float dt;
+    float dt = 0;
     float robot_x = 0;
     float robot_y = 0;
     float robot_orientation = 0;
 
     float w_max = 8;
-    float v_max = (w_max*wheel_radius)*0.3;
+    float v_max = (w_max*wheel_radius)*0.5;
     float angularV_max = 1;
 
     float integral_trr = 0;
@@ -72,7 +76,7 @@ int main(int argc, char *argv[]) {
                 float distance = sqrt(pow(desired_y-robot_y,2)+pow(desired_x-robot_x,2));
 
                 while (distance>0.02){
-                    float t = ros::Time::now().toSec();
+                    chrono::steady_clock::time_point t = chrono::steady_clock::now();
                     //usleep(100000);
                     rate.sleep();
                     desired_angle = atan2(-(desired_y-robot_y),(desired_x -robot_x));
@@ -97,8 +101,7 @@ int main(int argc, char *argv[]) {
                     output.angular.y = 0;
                     output.angular.z = angularVelocity;
 
-                    dt = ros::Time::now().toSec() - t;
-
+                    dt = (chrono::duration_cast<chrono::microseconds> (chrono::steady_clock::now() - t).count())/1000000.0;
                                
                     float real_linear_velocity =  ((right_speed + left_speed)/2) * wheel_radius;
                     float real_angular_velocity =  (right_speed - left_speed)/wheelbase*wheel_radius;

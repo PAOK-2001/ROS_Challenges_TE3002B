@@ -6,5 +6,4 @@
     <node name="path_generator"     pkg="mini_challenge_1" type="path_generator"   output="screen"/>
     <node name="closed_loop_controller" pkg="mini_challenge_2" type="closed_loop_controller"  output="screen"/>
 
-
 </launch>
