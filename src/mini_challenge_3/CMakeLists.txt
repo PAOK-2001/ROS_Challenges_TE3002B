@@ -122,9 +122,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(closed_loop_controller src/closed_loop_controller.cpp)
-target_link_libraries(closed_loop_controller ${catkin_LIBRARIES})
-
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

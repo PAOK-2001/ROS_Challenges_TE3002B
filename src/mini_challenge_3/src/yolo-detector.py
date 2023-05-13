@@ -1,15 +1,19 @@
+#!/usr/bin/env python
+
 import cv2
 import numpy as np
-
+import rospy 
+from std_msgs.msg import String 
 
 class LightDetector:
         def __init__(self, use_cuda):
+            self.light_publisher = rospy.Publisher("/traffic_light", String, queue_size=1)
             self._input_width = 640
             self._input_height = 640
             self._threshold = [0.2,0.4,0.4] # score, nms, confidence
             self._classes = ['changing-gy', 'changing-rg', 'changing-ry', 'traffic-green', 'traffic-red', 'traffic-yellow']                                                                                  
             self._display_colors = [(255, 255, 0), (0, 255, 0), (0, 255, 255), (0, 255, 0),(0,0,255),(0,128,128)]
-            self.classifier = cv2.dnn.readNetFromONNX("best.onnx")
+            self.classifier = cv2.dnn.readNetFromONNX("/home/abraham/Documents/Robotica/ROS_Challenges_TE3002B/src/mini_challenge_3/src/best.onnx")
             if use_cuda:
                 print("Running classifier on CUDA")
                 self.classifier.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
@@ -55,6 +59,8 @@ class LightDetector:
                         confidences.append(confidence)
 
                         class_ids.append(class_id)
+                        current_detection = self._classes[class_ids[0]]
+                        self.light_publisher.publish(current_detection)
 
                         x, y, w, h = row[0].item(), row[1].item(), row[2].item(), row[3].item() 
                         left = int((x - 0.5 * w) * x_factor)
@@ -80,11 +86,11 @@ class LightDetector:
 
 if __name__ == "__main__":
     detector = LightDetector(True)
-    #rospy.init_node("traffic_monitor")
-    camera = cv2.VideoCapture(1)
-    if ~camera.isOpened():
-       print('Could not read from camera')  
-       exit()
+    rospy.init_node("traffic_monitor")
+    camera = cv2.VideoCapture(2)
+    # if ~camera.isOpened():
+    #    print('Could not read from camera')  
+    #    exit()
     while True: 
         ret, frame = camera.read()
         frame_yolo = detector.format_frame(frame)
