@@ -4,18 +4,32 @@
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Path.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/String.h>
 #include <cmath>
 #include <chrono>
+#include <string>
+#include <map>
 
 using namespace std;
 
 int nodeRate = 100;
+bool change = 0;
+string last_color = "traffic-green";
 nav_msgs::Path path;
 float right_speed , left_speed;
 bool isReceiving = false;
+map<string, float> traffic_multiplier_map= { 
+  {"traffic-green", 1},
+  {"traffic-red", 0},
+  {"traffic-yellow", 0.5}
+};
 
 void receive_path(const nav_msgs::Path &received_path){
     path = received_path;
+}
+
+void receive_traffic_light(const std_msgs::String &received_color){
+    last_color = received_color.data;
 }
 
 void receive_right_speed(const std_msgs::Float32 &received_speed){
@@ -34,6 +48,7 @@ int main(int argc, char *argv[]) {
     bool hasFinished = false;
     
     ros::Subscriber systemFeedback = handler.subscribe("/path", 10, receive_path);
+    ros::Subscriber trafficLight = handler.subscribe("/traffic_light", 10, receive_traffic_light);
     ros::Subscriber wl = handler.subscribe("/wl", 10, receive_right_speed);
     ros::Subscriber wr = handler.subscribe("/wr", 10, receive_left_speed);
 
@@ -68,6 +83,7 @@ int main(int argc, char *argv[]) {
                 float desired_x = coord.pose.position.x;
                 float desired_y = coord.pose.position.y;
                 float desired_angle;
+                int traffic_light_multiplier = 1;
 
                 cout << "X Goal :" << desired_x << endl;
                 cout << "Y Goal :" << desired_y << endl;
@@ -76,6 +92,7 @@ int main(int argc, char *argv[]) {
                 float distance = sqrt(pow(desired_y-robot_y,2)+pow(desired_x-robot_x,2));
 
                 while (distance>0.02){
+                    traffic_light_multiplier = traffic_multiplier_map[last_color];
                     chrono::steady_clock::time_point t = chrono::steady_clock::now();
                     //usleep(100000);
                     rate.sleep();
@@ -85,11 +102,11 @@ int main(int argc, char *argv[]) {
                     if(angle_error > M_PI) angle_error = angle_error - 2*M_PI;
                     else if(angle_error < - M_PI)angle_error = angle_error + 2*M_PI;
                     
-                    float angularVelocity = kpr*angle_error;
+                    float angularVelocity = kpr*angle_error*traffic_light_multiplier;
                     if(angularVelocity > angularV_max) angularVelocity = angularV_max;
                     else if (angularVelocity < -angularV_max) angularVelocity = -angularV_max;
                     
-                    float velocity = kpt*distance + kit*integral_trr; 
+                    float velocity = (kpt*distance + kit*integral_trr)*traffic_light_multiplier; 
                     velocity = v_max * tanh(velocity);
                     integral_trr+=distance;
             

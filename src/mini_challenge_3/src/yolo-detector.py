@@ -14,6 +14,7 @@ class LightDetector:
             self._classes = ['changing-gy', 'changing-rg', 'changing-ry', 'traffic-green', 'traffic-red', 'traffic-yellow']                                                                                  
             self._display_colors = [(255, 255, 0), (0, 255, 0), (0, 255, 255), (0, 255, 0),(0,0,255),(0,128,128)]
             self.classifier = cv2.dnn.readNetFromONNX("/home/abraham/Documents/Robotica/ROS_Challenges_TE3002B/src/mini_challenge_3/src/best.onnx")
+            self.prev_color = 3
             if use_cuda:
                 print("Running classifier on CUDA")
                 self.classifier.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
@@ -60,7 +61,9 @@ class LightDetector:
 
                         class_ids.append(class_id)
                         current_detection = self._classes[class_ids[0]]
-                        self.light_publisher.publish(current_detection)
+                        if(self.prev_color != class_ids[0]):
+                            self.light_publisher.publish(current_detection)
+                            self.prev_color = class_ids[0]
 
                         x, y, w, h = row[0].item(), row[1].item(), row[2].item(), row[3].item() 
                         left = int((x - 0.5 * w) * x_factor)
