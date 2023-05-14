@@ -13,8 +13,7 @@
 using namespace std;
 
 int nodeRate = 100;
-bool change = 0;
-string last_color = "traffic-green";
+string old_last_color, last_color = "traffic-green";
 nav_msgs::Path path;
 float right_speed , left_speed;
 bool isReceiving = false;
@@ -93,6 +92,7 @@ int main(int argc, char *argv[]) {
 
                 while (distance>0.02){
                     traffic_light_multiplier = traffic_multiplier_map[last_color];
+                    if (old_last_color != last_color) integral_trr = 0;
                     chrono::steady_clock::time_point t = chrono::steady_clock::now();
                     //usleep(100000);
                     rate.sleep();
@@ -106,6 +106,7 @@ int main(int argc, char *argv[]) {
                     if(angularVelocity > angularV_max) angularVelocity = angularV_max;
                     else if (angularVelocity < -angularV_max) angularVelocity = -angularV_max;
                     
+
                     float velocity = (kpt*distance + kit*integral_trr)*traffic_light_multiplier; 
                     velocity = v_max * tanh(velocity);
                     integral_trr+=distance;
@@ -136,6 +137,7 @@ int main(int argc, char *argv[]) {
                     puzzlePose.pose.position.y = robot_y;
                     puzzlePose.pose.orientation.z = robot_orientation;
 
+                    old_last_color = last_color;
                     controllerOutput.publish(output);
                     estimated_pose.publish(puzzlePose);
                     ros::spinOnce();
