@@ -121,6 +121,8 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
 )
+add_executable(closed_loop_traffic src/closed_loop_controller.cpp)
+target_link_libraries(closed_loop_traffic ${catkin_LIBRARIES})
 
 
 ## Declare a C++ library
