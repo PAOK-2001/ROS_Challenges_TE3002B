@@ -13,7 +13,7 @@ class LightDetector:
             self._threshold = [0.2,0.4,0.4] # score, nms, confidence
             self._classes = ['changing-gy', 'changing-rg', 'changing-ry', 'traffic-green', 'traffic-red', 'traffic-yellow']                                                                                  
             self._display_colors = [(255, 255, 0), (0, 255, 0), (0, 255, 255), (0, 255, 0),(0,0,255),(0,128,128)]
-            self.classifier = cv2.dnn.readNetFromONNX("/home/abraham/Documents/Robotica/ROS_Challenges_TE3002B/src/mini_challenge_3/src/best.onnx")
+            self.classifier = cv2.dnn.readNetFromONNX("/home/puzzlebot/best.onnx")
             self.prev_color = 3
             if use_cuda:
                 print("Running classifier on CUDA")
@@ -90,12 +90,16 @@ class LightDetector:
 if __name__ == "__main__":
     detector = LightDetector(True)
     rospy.init_node("traffic_monitor")
-    camera = cv2.VideoCapture(2)
+    disp_width = 640
+    disp_height = 480
+    flip = 0
+    cam_port =  'nvarguscamerasrc !  video/x-raw(memory:NVMM), width=1280, height=720, format=NV12, framerate=60/1 ! nvvidconv flip-method=0 ! video/x-raw, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink drop=true'  
+    camera = cv2.VideoCapture(cam_port)
     # if ~camera.isOpened():
     #    print('Could not read from camera')  
     #    exit()
     while True: 
-        ret, frame = camera.read()
+        ret, frame= camera.read()
         frame_yolo = detector.format_frame(frame)
         preds = detector.detect_lights(frame_yolo)
         class_ids, confidences, boxes = detector.wrap_detection(frame_yolo, preds[0])
