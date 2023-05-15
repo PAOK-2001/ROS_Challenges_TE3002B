@@ -90,9 +90,6 @@ class LightDetector:
 if __name__ == "__main__":
     detector = LightDetector(True)
     rospy.init_node("traffic_monitor")
-    disp_width = 640
-    disp_height = 480
-    flip = 0
     cam_port =  'nvarguscamerasrc !  video/x-raw(memory:NVMM), width=1280, height=720, format=NV12, framerate=60/1 ! nvvidconv flip-method=0 ! video/x-raw, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink drop=true'  
     camera = cv2.VideoCapture(cam_port)
     # if ~camera.isOpened():
@@ -109,7 +106,7 @@ if __name__ == "__main__":
             cv2.rectangle(frame, (box[0], box[1] - 20), (box[0] + box[2], box[1]), color, -1)
             cv2.putText(frame, detector._classes[classid], (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,0))
         
-        cv2.imshow("output", frame)
+        #cv2.imshow("output", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
