@@ -13,7 +13,7 @@
 using namespace std;
 
 int nodeRate = 100;
-string old_last_color, last_color = "traffic-green";
+string old_last_color, last_color = "traffic-red";
 nav_msgs::Path path;
 float right_speed , left_speed;
 bool isReceiving = false;
