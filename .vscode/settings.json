@@ -11,6 +11,14 @@
         "iostream": "cpp",
         "cmath": "cpp",
         "algorithm": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "memory": "cpp",
+        "array": "cpp",
+        "string_view": "cpp",
+        "deque": "cpp",
+        "map": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp"
     }
 }
